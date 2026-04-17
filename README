@@ -1,0 +1,41 @@
+eqmap plugin for DokuWiki
+
+Renders a map of Norrath.
+
+All documentation for this plugin can be found at
+https://www.dokuwiki.org/plugin:eqmap
+
+If you install this plugin manually, make sure it is installed in
+lib/plugins/eqmap/ - if the folder is called different it
+will not work!
+
+Please refer to http://www.dokuwiki.org/extensions for additional info
+on how to install extensions in DokuWiki.
+
+----
+
+Sample Coordinates
+
+The coordinate system is still rather arbitrary. Here is a list of sample coordinates to get you started:
+
+Ak'Anon (3525.0, 2177.0)
+Freeport (1642.0, 2200.0)
+Kaladim (2560.5, 2680.5)
+Kelethin (3329.5, 2514.0)
+Neriak (1659.0, 2539.0)
+Qeynos (666.0, 2299.0)
+Rivervale (1351.5, 2487.5)
+
+----
+Copyright (C) Guy Turner <guy.alexander.turner@gmail.com>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 of the License
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+See the LICENSING file for details

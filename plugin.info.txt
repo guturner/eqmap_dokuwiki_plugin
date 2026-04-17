@@ -1,0 +1,7 @@
+base   eqmap
+author Guy Turner
+email  guy.alexander.turner@gmail.com
+date   2024-08-02
+name   eqmap plugin
+desc   Renders a map of Norrath.
+url    https://www.dokuwiki.org/plugin:eqmap

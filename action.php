@@ -31,8 +31,9 @@ class action_plugin_eqmap extends ActionPlugin
     {
         $pluginUrl = DOKU_URL . 'lib/plugins/eqmap/';
         $event->data['script'][] = [
-            'type'  => 'text/javascript',
-            '_data' => 'var eqmapBase = ' . json_encode($pluginUrl) . ';',
-        ];
+        'type'  => 'text/javascript',
+        '_data' => 'var eqmapBase = ' . json_encode($pluginUrl) . ';',
+        'defer' => 'defer'
+    ];
     }
 }

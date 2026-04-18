@@ -171,27 +171,24 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
         if($mode == 'xhtml'){
 			[$centered, $center_lat, $center_lon, $zoom, $poi_array] = $data;
 			
-			$poi_array_string = json_encode($poi_array);
-			
 			$poi_data = new StdClass;
-			
 			$poi_data->centered = $centered;
 			$poi_data->centerLat = $center_lat;
 			$poi_data->centerLon = $center_lon;
 			$poi_data->zoom = $zoom;
-			$poi_data->pois = $poi_array_string;
+			$poi_data->pois = $poi_array;
 			
 			$poi_data_json = json_encode($poi_data);
 			
-			$renderer->doc .= '<script defer="defer" src="data:text/javascript;base64,';
-            $renderer->doc .= base64_encode("poiData = $poi_data_json");
-            $renderer->doc .= '"></script>';
+			$renderer->doc .= '<script type="text/javascript">';
+			$renderer->doc .= 'var poiData = ' . $poi_data_json . ';';
+			$renderer->doc .= '</script>';
 			
             $renderer->doc .= '<div id="map"';
 			if ($centered) {
 				$renderer->doc .= ' style="margin: auto;"';
 			}
-			$renderer->doc .= ' class="map"><div id="tooltip"></div></div>';     // ptype = 'block'
+			$renderer->doc .= ' class="map"><div id="tooltip"></div></div>';
             return true;
         }
         return false;

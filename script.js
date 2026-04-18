@@ -15,26 +15,26 @@ function initMap() {
 		
 		
     // ==== START POI LAYER ====
-	const poiString = poiData.pois.replace(/\\"/g, '"');
-	
-	const iconLibrary = getMapIconLibrary();
 	const pois = [];
-	for (let poi of JSON.parse(poiString)) {
-		var iconFeature = new ol.Feature({
-			geometry: new ol.geom.Point([poi.lat, poi.lon]),
-		});
-		
-		iconFeature.setStyle(iconLibrary.get(poi.color));
-		iconFeature.set('name', poi.name);
-		pois.push(iconFeature);
-	}
+    const iconLibrary = getMapIconLibrary();
+    
+    for (let poi of poiData.pois) {
+        var iconFeature = new ol.Feature({
+            geometry: new ol.geom.Point([poi.lat, poi.lon]),
+        });
+        
+        iconFeature.setStyle(iconLibrary.get(poi.color));
+        iconFeature.set('name', poi.name);
+        pois.push(iconFeature);
+    }
 
     var poiSource = new ol.source.Vector({
         features: pois
     });
 
     var poiLayer = new ol.layer.Vector({
-        source: poiSource
+        source: poiSource,
+		renderMode: 'image'
     });
 	// ==== END POI LAYER ====
 
@@ -43,8 +43,6 @@ function initMap() {
 	if (poiData.centerLat && poiData.centerLon) {
 		center = [parseFloat(poiData.centerLat), parseFloat(poiData.centerLon)];
 	}
-	
-	console.log(poiData);
 	
 	const zoom = poiData.zoom ? parseInt(poiData.zoom) : 2;
 	

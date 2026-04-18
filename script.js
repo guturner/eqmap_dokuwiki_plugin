@@ -1,5 +1,39 @@
 /* DOKUWIKI:include ol.js */
 
+class InfoControl extends ol.control.Control {
+    constructor(opt_options) {
+        const options = opt_options || {};
+
+        const button = document.createElement('button');
+        button.innerHTML = '?';
+        button.title = 'Map Information';
+        button.className = 'ol-info-button';
+
+        const element = document.createElement('div');
+        element.className = 'ol-info-control ol-unselectable ol-control';
+        element.appendChild(button);
+
+        super({
+            element: element,
+            target: options.target,
+        });
+
+        button.addEventListener('click', () => {
+            const infoBox = document.getElementById('map-info-overlay');
+            if (infoBox) {
+                infoBox.innerHTML = options.message;
+                infoBox.classList.toggle('map-info-visible');
+                infoBox.classList.toggle('map-info-hidden');
+            }
+        });
+		
+		document.getElementById('map-info-overlay').addEventListener('click', function() {
+			this.classList.add('map-info-hidden');
+			this.classList.remove('map-info-visible');
+		});
+    }
+}
+
 function initMap() {
 	const projection = getProjection(0, 0, 3840, 3267); // TODO These numbers seem wrong, figure this out
 
@@ -51,6 +85,9 @@ function initMap() {
 		imageLayer,
 		poiLayer
 	  ],
+	  controls: ol.control.defaults.defaults().extend(
+		poiData.info ? [new InfoControl({ message: poiData.info })] : []
+	  ),
 	  target: 'map',
 	  view: new ol.View({
 		projection: projection,

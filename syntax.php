@@ -145,7 +145,10 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
 			$poi_array = json_decode($matches[1]);
 		}
 		
-        return [$centered, $center_lat, $center_lon, $zoom, $poi_array];
+		preg_match('/info="([^"]*)"/', $match, $q_match);
+		$info_text = $q_match[1] ?? '';
+		
+        return [$centered, $center_lat, $center_lon, $zoom, $poi_array, $info_text];
     }
  
    /**
@@ -169,7 +172,7 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
     */
     function render($mode, Doku_Renderer $renderer, $data) {
         if($mode == 'xhtml'){
-			[$centered, $center_lat, $center_lon, $zoom, $poi_array] = $data;
+			[$centered, $center_lat, $center_lon, $zoom, $poi_array, $info_text] = $data;
 			
 			$poi_data = new StdClass;
 			$poi_data->centered = $centered;
@@ -177,6 +180,7 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
 			$poi_data->centerLon = $center_lon;
 			$poi_data->zoom = $zoom;
 			$poi_data->pois = $poi_array;
+			$poi_data->info = $info_text;
 			
 			$poi_data_json = json_encode($poi_data);
 			
@@ -188,7 +192,10 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
 			if ($centered) {
 				$renderer->doc .= ' style="margin: auto;"';
 			}
-			$renderer->doc .= ' class="map"><div id="tooltip"></div></div>';
+			$renderer->doc .= '<div id="map" class="map">';
+			$renderer->doc .= '  <div id="tooltip"></div>';
+			$renderer->doc .= '  <div id="map-info-overlay" class="map-info-hidden"></div>';
+			$renderer->doc .= '</div>';
             return true;
         }
         return false;

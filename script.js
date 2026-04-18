@@ -102,6 +102,19 @@ function initMap() {
 	const tooltip = document.getElementById('tooltip');
 
 	let currentFeature;
+	let pinnedFeature = null; // Tracks a tooltip pinned by tap / click on mobile
+	
+	const showTooltip = function (feature, pixel) {
+		tooltip.style.left = (pixel[0] + 12) + 'px';
+		tooltip.style.top = (pixel[1] + 24) + 'px';
+		tooltip.style.visibility = 'visible';
+		tooltip.innerText = feature.get('name');
+	};
+
+	const hideTooltip = function () {
+		tooltip.style.visibility = 'hidden';
+	};
+	
 	const displayFeatureTooltip = function (pixel, target) {
 		const feature = target.closest('.ol-control') ? 
 			undefined : 
@@ -110,15 +123,9 @@ function initMap() {
 			});
 			
 		if (feature) {
-			tooltip.style.left = (pixel[0] + 12) + 'px';
-			tooltip.style.top = (pixel[1] + 24) + 'px';
-		
-			if (feature !== currentFeature) {
-				tooltip.style.visibility = 'visible';
-				tooltip.innerText = feature.get('name');
-			}
+			showTooltip(feature, pixel);
 		} else {
-			tooltip.style.visibility = 'hidden';
+			hideTooltip();
 		}
 	  
 		currentFeature = feature;
@@ -126,22 +133,53 @@ function initMap() {
 
 	map.on('pointermove', function (evt) {
 		if (evt.dragging) {
-			tooltip.style.visibility = 'hidden';
+			pinnedFeature = null;
+			hideTooltip();
 			currentFeature = undefined;
 			return;
 		}
+		
+		// On mobile, pointermove fires during drag — skip hover logic if pinned
+		if (pinnedFeature) return;
 
 		const pixel = map.getEventPixel(evt.originalEvent);
 		displayFeatureTooltip(pixel, evt.originalEvent.target);
 	});
 
 	map.on('click', function (evt) {
-		displayFeatureTooltip(evt.pixel, evt.originalEvent.target);
+		if (evt.originalEvent.target.closest('.ol-control')) return;
+
+		const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+			return feature;
+		});
+
+		if (feature) {
+			if (pinnedFeature === feature) {
+				// Tapping the same POI again unpins/hides the tooltip
+				pinnedFeature = null;
+				hideTooltip();
+			} else {
+				// Pin the tooltip for this POI
+				pinnedFeature = feature;
+				showTooltip(feature, evt.pixel);
+			}
+		} else {
+			// Tapped empty space — unpin and hide
+			pinnedFeature = null;
+			hideTooltip();
+		}
+	});
+	
+	map.getTargetElement().addEventListener('wheel', function () {
+		pinnedFeature = null;
+		currentFeature = undefined;
+		hideTooltip();
 	});
 
 	map.getTargetElement().addEventListener('pointerleave', function () {
+		if (pinnedFeature) return; // Keep tooltip visible if pinned
 		currentFeature = undefined;
-		tooltip.style.visibility = 'hidden';
+		hideTooltip();
 	});
 	// ==== END POI TOOLTIP ====
 	

@@ -1,210 +1,241 @@
 <?php
-
-use dokuwiki\Logger;
-
 /**
- * All DokuWiki plugins to extend the parser/rendering mechanism
- * need to inherit from this class
+ * DokuWiki Plugin eqmap (Syntax Component)
+ *
+ * Registers the <eqmap> tag and renders an interactive OpenLayers map
+ * of Norrath directly in a DokuWiki page.
+ *
+ * Usage:
+ *   <eqmap [options]></eqmap>
+ *
+ * Options (all optional):
+ *   centered               — centres the map horizontally on the page
+ *   centerLat=<float>      — initial map centre, latitude (pixel coord)
+ *   centerLon=<float>      — initial map centre, longitude (pixel coord)
+ *   zoom=<int>             — initial zoom level (default: 2, max: 8)
+ *   poi='[{…}, …]'         — JSON array of point-of-interest objects
+ *   info="<html>"          — HTML shown in the info (?) overlay
+ *   debug                  — overlays a coordinate grid for authoring
+ *
+ * POI object shape:
+ *   { "name": "string", "color": "red|green|grey|1-6", "lat": float, "lon": float }
+ *
+ * @license GPL-2 http://www.gnu.org/licenses/gpl-2.0.html
+ * @author  Guy Turner <guy.alexander.turner@gmail.com>
  */
-class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
- 
- 
- 
-   /**
-    * Get the type of syntax this plugin defines.
-    *
-    * @param none
-    * @return String <tt>'substition'</tt> (i.e. 'substitution').
-    * @public
-    * @static
-    */
-    function getType(){
+
+// Bail early if not inside DokuWiki.
+if (!defined('DOKU_INC')) die();
+
+class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin
+{
+    public function getType(): string
+    {
         return 'substition';
     }
 
- 
-   /**
-    * Define how this plugin is handled regarding paragraphs.
-    *
-    * <p>
-    * This method is important for correct XHTML nesting. It returns
-    * one of the following values:
-    * </p>
-    * <dl>
-    * <dt>normal</dt><dd>The plugin can be used inside paragraphs.</dd>
-    * <dt>block</dt><dd>Open paragraphs need to be closed before
-    * plugin output.</dd>
-    * <dt>stack</dt><dd>Special case: Plugin wraps other paragraphs.</dd>
-    * </dl>
-    * @param none
-    * @return String <tt>'block'</tt>.
-    * @public
-    * @static
-    */
-    function getPType(){
+    public function getPType(): string
+    {
         return 'block';
     }
- 
-   /**
-    * Where to sort in?
-    *
-    * @param none
-    * @return Integer <tt>6</tt>.
-    * @public
-    * @static
-    */
-    function getSort(){
+
+    public function getSort(): int
+    {
         return 901;
     }
- 
- 
-   /**
-    * Connect lookup pattern to lexer.
-    *
-    * @param $aMode String The desired rendermode.
-    * @return none
-    * @public
-    * @see render()
-    */
-    function connectTo($mode) {
-      $this->Lexer->addSpecialPattern('<eqmap ?[^>\n]*>.*?</eqmap>',$mode,'plugin_eqmap');
+
+    public function connectTo($mode): void
+    {
+        $this->Lexer->addSpecialPattern(
+            '<eqmap ?[^>\n]*>.*?</eqmap>',
+            $mode,
+            'plugin_eqmap'
+        );
     }
- 
- 
- 
-   /**
-    * Handler to prepare matched data for the rendering process.
-    *
-    * <p>
-    * The <tt>$aState</tt> parameter gives the type of pattern
-    * which triggered the call to this method:
-    * </p>
-    * <dl>
-    * <dt>DOKU_LEXER_ENTER</dt>
-    * <dd>a pattern set by <tt>addEntryPattern()</tt></dd>
-    * <dt>DOKU_LEXER_MATCHED</dt>
-    * <dd>a pattern set by <tt>addPattern()</tt></dd>
-    * <dt>DOKU_LEXER_EXIT</dt>
-    * <dd> a pattern set by <tt>addExitPattern()</tt></dd>
-    * <dt>DOKU_LEXER_SPECIAL</dt>
-    * <dd>a pattern set by <tt>addSpecialPattern()</tt></dd>
-    * <dt>DOKU_LEXER_UNMATCHED</dt>
-    * <dd>ordinary text encountered within the plugin's syntax mode
-    * which doesn't match any pattern.</dd>
-    * </dl>
-    * @param $aMatch String The text matched by the patterns.
-    * @param $aState Integer The lexer state for the match.
-    * @param $aPos Integer The character position of the matched text.
-    * @param $aHandler Object Reference to the Doku_Handler object.
-    * @return Integer The current lexer state for the match.
-    * @public
-    * @see render()
-    * @static
-    */
-    function handle($match, $state, $pos, Doku_Handler $handler){
-		$_tag       = explode('>', substr($match, 7, -8), 2);
-        $str_params = $_tag[0];
-		
-		$centered = false;
-		$matches = [];
-		preg_match('/(centered)/', $str_params, $matches);
-		$centered_provided = count($matches) === 2;
-		if ($centered_provided) {
-			$centered = true;
-		}
-		
-		$center_lat = null;
-		$matches = [];
-		preg_match('/centerLat=(\d+(?:\.\d+)?)/', $str_params, $matches);
-		$center_lat_provided = count($matches) === 2;
-		if ($center_lat_provided) {
-			$center_lat = $matches[1];
-		}
-		
-		$center_lon = null;
-		$matches = [];
-		preg_match('/centerLon=(\d+(?:\.\d+)?)/', $str_params, $matches);
-		$center_lon_provided = count($matches) === 2;
-		if ($center_lon_provided) {
-			$center_lon = $matches[1];
-		}
-		
-		$zoom = null;
-		$matches = [];
-		preg_match('/zoom=(\d+)/', $str_params, $matches);
-		$zoom_provided = count($matches) === 2;
-		if ($zoom_provided) {
-			$zoom = $matches[1];
-		}
-		
-		$poi_array = [];
-		$matches = [];
-		preg_match('/poi=[\'"](.*)[\'"]/', $str_params, $matches);
-		$poi_provided = count($matches) === 2;
-		if ($poi_provided) {
-			$poi_array = json_decode($matches[1]);
-		}
-		
-		preg_match('/info="([^"]*)"/', $match, $q_match);
-		$info_text = $q_match[1] ?? '';
-		
-		$debug = false;
-		preg_match('/\bdebug\b/', $str_params, $debug_matches);
-		if (count($debug_matches) > 0) {
-			$debug = true;
-		}
-		
-        return [$centered, $center_lat, $center_lon, $zoom, $poi_array, $info_text, $debug];
+
+    // -------------------------------------------------------------------------
+    // Parsing
+    // -------------------------------------------------------------------------
+
+    /**
+     * Parse the matched <eqmap> tag into a structured data array.
+     *
+     * Returns an associative array so individual fields can be added or removed without breaking positional assumptions downstream.
+     *
+     * @param string       $match   Raw text matched by the lexer pattern.
+     * @param int          $state   Lexer state (always DOKU_LEXER_SPECIAL here).
+     * @param int          $pos     Character offset of the match in the source.
+     * @param Doku_Handler $handler Reference to the current parser handler.
+     * @return array{
+     *   centered:   bool,
+     *   centerLat:  string|null,
+     *   centerLon:  string|null,
+     *   zoom:       string|null,
+     *   pois:       array,
+     *   info:       string,
+     *   debug:      bool,
+     * }
+     */
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
+    {
+        $attrString = $this->extractAttributeString($match);
+
+        return [
+            'centered'  => $this->hasFlag('centered', $attrString),
+            'centerLat' => $this->extractFloat('centerLat', $attrString),
+            'centerLon' => $this->extractFloat('centerLon', $attrString),
+            'zoom'      => $this->extractInt('zoom', $attrString),
+            'pois'      => $this->extractPois($attrString),
+            'info'      => $this->extractInfo($match),
+            'debug'     => $this->hasFlag('debug', $attrString),
+        ];
     }
- 
-   /**
-    * Handle the actual output creation.
-    *
-    * <p>
-    * The method checks for the given <tt>$aFormat</tt> and returns
-    * <tt>FALSE</tt> when a format isn't supported. <tt>$aRenderer</tt>
-    * contains a reference to the renderer object which is currently
-    * handling the rendering. The contents of <tt>$aData</tt> is the
-    * return value of the <tt>handle()</tt> method.
-    * </p>
-    * @param $aFormat String The output format to generate.
-    * @param $aRenderer Object A reference to the renderer object.
-    * @param $aData Array The data created by the <tt>handle()</tt>
-    * method.
-    * @return Boolean <tt>TRUE</tt> if rendered successfully, or
-    * <tt>FALSE</tt> otherwise.
-    * @public
-    * @see handle()
-    */
-    function render($mode, Doku_Renderer $renderer, $data) {
-        if($mode == 'xhtml'){
-			[$centered, $center_lat, $center_lon, $zoom, $poi_array, $info_text, $debug] = $data;
-			
-			$poi_data = new StdClass;
-			$poi_data->centered = $centered;
-			$poi_data->centerLat = $center_lat;
-			$poi_data->centerLon = $center_lon;
-			$poi_data->zoom = $zoom;
-			$poi_data->pois = $poi_array;
-			$poi_data->info = $info_text;
-			$poi_data->debug = $debug;
-			
-			$poi_data_json = json_encode($poi_data);
-			
-			$renderer->doc .= '<script type="text/javascript">';
-			$renderer->doc .= 'var poiData = ' . $poi_data_json . ';';
-			$renderer->doc .= '</script>';
-			
-            $renderer->doc .= '<div';
-			if ($centered) {
-				$renderer->doc .= ' style="margin: auto;"';
-			}
-			$renderer->doc .= ' id="map" class="map">';
-			$renderer->doc .= '  <div id="tooltip"></div>';
-			$renderer->doc .= '  <div id="map-info-overlay" class="map-info-hidden"></div>';
-			$renderer->doc .= '</div>';
-            return true;
+
+    // -------------------------------------------------------------------------
+    // Rendering
+    // -------------------------------------------------------------------------
+
+    /**
+     * Emit the HTML that bootstraps the map on the page.
+     *
+     * The map is driven by a `poiData` JS object injected here; the actual OL
+     * map is initialised by eqmap.js once the DOM is ready.
+     */
+    public function render($mode, Doku_Renderer $renderer, $data): bool
+    {
+        if ($mode !== 'xhtml') {
+            return false;
         }
-        return false;
+
+        $renderer->doc .= $this->renderPoiDataScript($data);
+        $renderer->doc .= $this->renderMapHtml($data);
+
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Pull the raw attribute string out of the opening <eqmap …> tag.
+     *
+     * e.g. '<eqmap centered zoom=3>…</eqmap>' → 'centered zoom=3'
+     */
+    private function extractAttributeString(string $match): string
+    {
+        // Strip '<eqmap' prefix, then take everything up to the first '>'.
+        $withoutTag = ltrim(substr($match, 6)); // 6 = strlen('<eqmap')
+        $gtPos      = strpos($withoutTag, '>');
+
+        return $gtPos !== false ? substr($withoutTag, 0, $gtPos) : '';
+    }
+
+    /**
+     * Return true when a bare flag keyword (e.g. "centered", "debug") is
+     * present in the attribute string.
+     */
+    private function hasFlag(string $flag, string $attrString): bool
+    {
+        return (bool) preg_match('/\b' . preg_quote($flag, '/') . '\b/', $attrString);
+    }
+
+    /**
+     * Extract a named float attribute (e.g. centerLat=1234.5).
+     * Returns null if the attribute is absent.
+     */
+    private function extractFloat(string $name, string $attrString): ?string
+    {
+        if (preg_match('/' . preg_quote($name, '/') . '=(\d+(?:\.\d+)?)/', $attrString, $m)) {
+            return $m[1];
+        }
+        return null;
+    }
+
+    /**
+     * Extract a named integer attribute (e.g. zoom=3).
+     * Returns null if the attribute is absent.
+     */
+    private function extractInt(string $name, string $attrString): ?string
+    {
+        if (preg_match('/' . preg_quote($name, '/') . '=(\d+)/', $attrString, $m)) {
+            return $m[1];
+        }
+        return null;
+    }
+
+    /**
+     * Extract and JSON-decode the poi='[…]' attribute.
+     * Returns an empty array on parse failure or absence.
+     */
+    private function extractPois(string $attrString): array
+	{
+		// 1. Match the content inside the poi='...' or poi="..." attribute
+		if (!preg_match('/\bpoi=([\'"])(.*?)\1\s*(?:\w+=|$|\>)/', $attrString . ' ', $m)) {
+			return [];
+		}
+
+		// 2. Decode HTML entities (like &apos; or &#39;) back into real characters
+		$jsonRaw = html_entity_decode($m[2], ENT_QUOTES, 'UTF-8');
+
+		// 3. Decode the resulting JSON string
+		$decoded = json_decode($jsonRaw, true);
+
+		return is_array($decoded) ? $decoded : [];
+	}
+
+    /**
+     * Extract the info="…" attribute from the full match (not just the attr
+     * string) so that embedded quotes inside the value are handled correctly.
+     */
+    private function extractInfo(string $fullMatch): string
+    {
+        if (preg_match('/\binfo="([^"]*)"/', $fullMatch, $m)) {
+            return $m[1];
+        }
+        return '';
+    }
+
+    /**
+     * Render the inline <script> that exposes poiData to eqmap.js.
+     *
+     * Keeping this as a separate method makes it easy to unit-test the JSON
+     * shape without parsing HTML.
+     *
+     * @param array $data Parsed data from handle().
+     */
+    private function renderPoiDataScript(array $data): string
+    {
+        $poiData = [
+            'centered'  => $data['centered'],
+            'centerLat' => $data['centerLat'],
+            'centerLon' => $data['centerLon'],
+            'zoom'      => $data['zoom'],
+            'pois'      => $data['pois'],
+            'info'      => $data['info'],
+            'debug'     => $data['debug'],
+        ];
+
+        $json = json_encode($poiData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_QUOT);
+
+		return '<script type="text/javascript">var poiData = ' . $json . ';</script>' . "\n";
+    }
+
+    /**
+     * Render the map container div and its child overlay elements.
+     *
+     * @param array $data Parsed data from handle().
+     */
+    private function renderMapHtml(array $data): string
+    {
+        $style = $data['centered'] ? ' style="margin: auto;"' : '';
+
+        return implode("\n", [
+            '<div id="map" class="map"' . $style . '>',
+            '  <div id="tooltip"></div>',
+            '  <div id="map-info-overlay" class="map-info-hidden"></div>',
+            '</div>',
+            '',
+        ]);
     }
 }

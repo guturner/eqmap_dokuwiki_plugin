@@ -673,4 +673,31 @@ function initDebugGrid(map, projection) {
 // Bootstrap
 // ---------------------------------------------------------------------------
 
-jQuery(initMap);
+/**
+ * Wait until `window.poiData` is defined before initialising the map.
+ *
+ * `jQuery(initMap)` fires on DOM-ready, but the inline <script> injected by
+ * syntax.php may execute *after* this module depending on script load order.
+ * Polling with a short interval handles that race without requiring changes to
+ * how DokuWiki injects the data.
+ */
+jQuery(function () {
+    const POLL_INTERVAL_MS = 20;
+    const TIMEOUT_MS       = 5000;
+    let   elapsed          = 0;
+
+    const poll = setInterval(function () {
+        elapsed += POLL_INTERVAL_MS;
+
+        if (window.poiData && Array.isArray(window.poiData.pois)) {
+            clearInterval(poll);
+            initMap();
+            return;
+        }
+
+        if (elapsed >= TIMEOUT_MS) {
+            clearInterval(poll);
+            console.error('eqmap: timed out waiting for poiData');
+        }
+    }, POLL_INTERVAL_MS);
+});

@@ -148,7 +148,13 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
 		preg_match('/info="([^"]*)"/', $match, $q_match);
 		$info_text = $q_match[1] ?? '';
 		
-        return [$centered, $center_lat, $center_lon, $zoom, $poi_array, $info_text];
+		$debug = false;
+		preg_match('/\bdebug\b/', $str_params, $debug_matches);
+		if (count($debug_matches) > 0) {
+			$debug = true;
+		}
+		
+        return [$centered, $center_lat, $center_lon, $zoom, $poi_array, $info_text, $debug];
     }
  
    /**
@@ -172,7 +178,7 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
     */
     function render($mode, Doku_Renderer $renderer, $data) {
         if($mode == 'xhtml'){
-			[$centered, $center_lat, $center_lon, $zoom, $poi_array, $info_text] = $data;
+			[$centered, $center_lat, $center_lon, $zoom, $poi_array, $info_text, $debug] = $data;
 			
 			$poi_data = new StdClass;
 			$poi_data->centered = $centered;
@@ -181,6 +187,7 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
 			$poi_data->zoom = $zoom;
 			$poi_data->pois = $poi_array;
 			$poi_data->info = $info_text;
+			$poi_data->debug = $debug;
 			
 			$poi_data_json = json_encode($poi_data);
 			
@@ -188,11 +195,11 @@ class syntax_plugin_eqmap extends DokuWiki_Syntax_Plugin {
 			$renderer->doc .= 'var poiData = ' . $poi_data_json . ';';
 			$renderer->doc .= '</script>';
 			
-            $renderer->doc .= '<div id="map"';
+            $renderer->doc .= '<div';
 			if ($centered) {
 				$renderer->doc .= ' style="margin: auto;"';
 			}
-			$renderer->doc .= '<div id="map" class="map">';
+			$renderer->doc .= ' id="map" class="map">';
 			$renderer->doc .= '  <div id="tooltip"></div>';
 			$renderer->doc .= '  <div id="map-info-overlay" class="map-info-hidden"></div>';
 			$renderer->doc .= '</div>';

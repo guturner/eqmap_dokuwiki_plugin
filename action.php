@@ -21,7 +21,7 @@ class action_plugin_eqmap extends ActionPlugin
 
     final public function insertButton(Event $event): void
     {
-		$open_string = '<eqmap centered centerLat=1234.5 centerLon=4321.0 zoom=6 ';
+		$open_string = '<eqmap centered debug centerLat=1234.5 centerLon=4321.0 zoom=6 ';
 		$open_string .= 'poi=\'[{"name":"Base Camp","color":"red","lat":1234.5,"lon":4321.0}]\'>';
 		
         $event->data[] = ['type' => 'format', 'title' => 'Map of Norrath', 'icon' => '../../plugins/eqmap/icons/icon.png', 'open' => $open_string, 'sample' => '', 'close' => '</eqmap>'];

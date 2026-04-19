@@ -441,3 +441,27 @@
     top: .5em;
     right: .5em;
 }
+
+/* Debug grid canvas — sits above the map, below controls */
+.eqmap-debug-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+}
+
+/* Debug grid toggle button — positioned below the info (?) button */
+.ol-debug-grid-control {
+    top: 3em;
+    right: .5em;
+}
+
+/* Active state: button glows amber to match grid colour */
+.ol-debug-grid-button.ol-debug-grid-active {
+    background-color: #ffe050 !important;
+    color: #1a1a1a !important;
+    outline: 2px solid rgba(255, 220, 80, 0.6);
+}

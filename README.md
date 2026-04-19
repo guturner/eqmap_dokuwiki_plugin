@@ -73,15 +73,15 @@ All options are **optional**.  The tag body is currently unused (reserved for fu
 ```xml
 <eqmap
   centered
-  centerLat=1351.5
-  centerLon=2487.5
+  centerLat=1268.5
+  centerLon=2464.5
   zoom=4
   poi='[
     {"name":"Rivervale",  "color":"green", "lat":1351.5, "lon":2487.5},
-    {"name":"Misty Thicket","color":"red", "lat":1400.0, "lon":2500.0},
-    {"name":"Kithicor",   "color":"grey",  "lat":1500.0, "lon":2460.0}
+    {"name":"Misty Thicket","color":"grey", "lat":1306.0, "lon":2562.0},
+    {"name":"Kithicor",   "color":"grey",  "lat":1298.0, "lon":2381.0}
   ]'
-  info="<b>The Kithicor Region</b><br>Follow the road east from Rivervale to reach the Commonlands.">
+  info="<b>The Kithicor Region</b>: Follow the road south from Rivervale to reach the Commonlands.">
 </eqmap>
 ```
 

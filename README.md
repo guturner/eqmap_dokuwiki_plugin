@@ -136,7 +136,7 @@ Add the `centered` flag to horizontally centre the map block on the page:
 <eqmap centered zoom=2></eqmap>
 ```
 
-The map width is controlled by the `.map` CSS class (default: `75%`).  To override it for a specific page, wrap the tag in a `<div>` with a custom style, or edit `css/eqmap.css` globally.
+The map width is controlled by the `.map` CSS class (default: `75%`).  To override it for a specific page, wrap the tag in a `<div>` with a custom style, or edit `style.css` globally.
 
 ---
 
@@ -231,8 +231,8 @@ lib/plugins/eqmap/
 |---|---|
 | `syntax.php` | Parse `<eqmap>` attributes → emit `poiData` JSON + map HTML |
 | `action.php` | Side-effects: toolbar button, `eqmapBase` URL variable |
-| `js/eqmap.js` | All client-side map logic (OL init, layers, tooltip, debug grid) |
-| `css/eqmap.css` | Visual styling for plugin-specific elements only |
+| `script.js`  | All client-side map logic (OL init, layers, tooltip, debug grid) |
+| `style.css`  | Visual styling for plugin-specific elements only |
 
 ---
 

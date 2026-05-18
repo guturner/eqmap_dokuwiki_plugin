@@ -2,8 +2,6 @@
 
 Renders an interactive, zoomable map of **Norrath** (EverQuest) inside any DokuWiki page.  Built on [OpenLayers](https://openlayers.org/).
 
-![example](img/1.png)
-
 ---
 
 ## Table of contents
@@ -20,7 +18,7 @@ Renders an interactive, zoomable map of **Norrath** (EverQuest) inside any DokuW
 8. [Known coordinates](#known-coordinates)
 9. [File structure](#file-structure)
 10. [Contributing](#contributing)
-11. [License](#license)
+12. [License](#license)
 
 ---
 
@@ -75,15 +73,15 @@ All options are **optional**.  The tag body is currently unused (reserved for fu
 ```xml
 <eqmap
   centered
-  centerLat=1268.5
-  centerLon=2464.5
+  centerLat=1351.5
+  centerLon=2487.5
   zoom=4
   poi='[
     {"name":"Rivervale",  "color":"green", "lat":1351.5, "lon":2487.5},
-    {"name":"Misty Thicket","color":"grey", "lat":1306.0, "lon":2562.0},
-    {"name":"Kithicor",   "color":"grey",  "lat":1298.0, "lon":2381.0}
+    {"name":"Misty Thicket","color":"red", "lat":1400.0, "lon":2500.0},
+    {"name":"Kithicor",   "color":"grey",  "lat":1500.0, "lon":2460.0}
   ]'
-  info="<b>The Kithicor Region</b>: Follow the road south from Rivervale to reach the Commonlands.">
+  info="<b>The Kithicor Region</b><br>Follow the road east from Rivervale to reach the Commonlands.">
 </eqmap>
 ```
 
@@ -200,16 +198,15 @@ The Norrath coordinate system is pixel-based (X increases right, Y increases dow
 lib/plugins/eqmap/
 │
 ├── plugin.info.txt         Plugin metadata (required by DokuWiki)
+
 ├── action.php              Injects toolbar button + eqmapBase JS variable
 ├── syntax.php              Registers <eqmap> tag, parses attributes, emits HTML
 │
-├── js/
-│   ├── eqmap.js            Map initialisation, POI layer, tooltip, debug grid
-│   └── ol.js               OpenLayers bundle (included by eqmap.js via DOKUWIKI directive)
+├── script.js               Map initialisation, POI layer, tooltip, debug grid
+├── ol.js                   OpenLayers bundle (included by eqmap.js via DOKUWIKI directive)
 │
-├── css/
-│   ├── eqmap.css           Plugin-specific styles (map, tooltip, controls, spinner)
-│   └── ol.css              OpenLayers default styles
+├── style.css               Plugin-specific styles (map, tooltip, controls, spinner)
+├── ol.css                  OpenLayers default styles
 │
 ├── icons/
 │   ├── icon.png            Toolbar button icon
@@ -221,6 +218,7 @@ lib/plugins/eqmap/
 ├── maps/
 │   └── norrath.png         The base map image
 │
+├── package.json            npm config for running JS tests
 ├── README.md               This file
 └── LICENSE                 GPL-2
 ```
@@ -245,7 +243,8 @@ lib/plugins/eqmap/
    ```js
    ['blue', 'icons/marker-blue.png'],
    ```
-3. Document the new key in this README under [Colour palette](#colour-palette).
+3. Add a test entry in `tests/js/eqmap.test.js` (the `POI_ICONS` suite will catch a missing entry).
+4. Document the new key in this README under [Colour palette](#colour-palette).
 
 No PHP changes are required.
 
@@ -253,7 +252,8 @@ No PHP changes are required.
 
 1. **PHP:** Add a new private extract method in `syntax.php` (follow the pattern of `extractFloat`, `extractInt`, `hasFlag`) and call it from `handle()`.  Add the key to `renderPoiDataScript()`.
 2. **JS:** Read the new key from `poiData` in `initMap()` (or wherever appropriate).
-3. **Docs:** Add a row to the [Tag reference](#tag-reference) table.
+3. **Tests:** Add a `testHandleParsesX` case to `tests/syntax_test.php`.
+4. **Docs:** Add a row to the [Tag reference](#tag-reference) table.
 
 ### Code style
 

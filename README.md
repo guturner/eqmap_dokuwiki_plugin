@@ -20,7 +20,7 @@ Renders an interactive, zoomable map of **Norrath** (EverQuest) inside any DokuW
 8. [Known coordinates](#known-coordinates)
 9. [File structure](#file-structure)
 10. [Contributing](#contributing)
-12. [License](#license)
+11. [License](#license)
 
 ---
 

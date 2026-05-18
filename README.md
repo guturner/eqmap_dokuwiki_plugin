@@ -2,6 +2,8 @@
 
 Renders an interactive, zoomable map of **Norrath** (EverQuest) inside any DokuWiki page.  Built on [OpenLayers](https://openlayers.org/).
 
+![example](img/1.png)
+
 ---
 
 ## Table of contents
